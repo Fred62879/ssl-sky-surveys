@@ -1,3 +1,5 @@
+
+import time
 import logging
 import glob
 import torch
@@ -13,7 +15,10 @@ from utils.sdss_dr12_galactic_reddening import SDSSDR12Reddening
 class RandomRotate:
   def __call__(self, image):
     # print("RR", image.shape, image.dtype)
-    return (skimage.transform.rotate(image, np.float32(360*np.random.rand(1)))).astype(np.float32)
+    # return (skimage.transform.rotate(image, np.float32(360*np.random.rand(1)))).astype(np.float32)
+    # potential bug of original code
+    deg = np.float32(360*np.random.rand(1))[0]
+    return (skimage.transform.rotate(image, deg)).astype(np.float32)
 
 class JitterCrop:
   def __init__(self, outdim, jitter_lim=None):
@@ -29,6 +34,7 @@ class JitterCrop:
       center_x += int(np.random.randint(-self.jitter_lim, self.jitter_lim+1, 1))
       center_y += int(np.random.randint(-self.jitter_lim, self.jitter_lim+1, 1))
 
+    # print('rr done')
     return image[(center_x-self.offset):(center_x+self.offset), (center_y-self.offset):(center_y+self.offset)]
 
 def get_data_loader(params, files_pattern, distributed, is_train, load_specz):
@@ -72,7 +78,8 @@ class SDSSDataset(Dataset):
     self.n_samples = self.n_files * self.n_samples_per_file
 
     self.files = [None for _ in range(self.n_files)]
-    logging.info("Found {} at path {}. Number of examples: {}".format(self.n_files, self.files_pattern, self.n_samples))
+    logging.info("Found {} at path {}. Number of examples: {}".format(
+      self.n_files, self.files_pattern, self.n_samples))
 
   def _open_file(self, ifile):
     self.files[ifile] = h5py.File(self.files_paths[ifile], 'r')
@@ -100,11 +107,30 @@ class SDSSDataset(Dataset):
 
     if self.load_ebv:
       ebv = self.files[ifile]['e_bv'][local_idx]
+      # print('ebv', image.shape, ebv)
       out = [image, ebv]
     else:
       out = image
 
+    # for i in out:
+    # if type(i) == list:
+    #   print('list', len(i))
+    # elif type(i) == np.ndarray:
+    #   print('array', i.shape)
+    # else:
+    #   print(i)
+
+    # if self.load_specz:
+    #   return self.transform(out), specz_bin, torch.tensor(specz)
+    # else:
+    #   return self.transform(out)
+
+    # start = time.time()
+    transformed = self.transform(out)
+    # elapsed = time.time() - start
+    # logging.info(f"data transform takes {elapsed}s.")
+
     if self.load_specz:
-      return self.transform(out), specz_bin, torch.tensor(specz)
+      return transformed, specz_bin, torch.tensor(specz)
     else:
-      return self.transform(out)
+      return transformed

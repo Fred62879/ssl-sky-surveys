@@ -11,9 +11,10 @@ default: &DEFAULT
   weight_decay: 0.
   lr_milestones: [60, 90]
 
-  train_data_path: '/tmp/train*.h5'
-  valid_data_path: '/tmp/valid*.h5'
-  num_data_workers: 6
+  train_data_path: '/scratch/projects/vision/code/ssl-sky-surveys/tmp/*train*.h5'
+  valid_data_path: '/scratch/projects/vision/code/ssl-sky-surveys/tmp/*train*.h5'
+  # checkpoint_path: '/scratch/projects/vision/code/ssl-sky-surveys/expts/default/checkpoints/pretrained_paper_model.pth.tar'
+  num_data_workers: 5
   num_channels: 5
 
   # spec-z
@@ -21,12 +22,12 @@ default: &DEFAULT
   num_classes: 180
 
   max_epochs: 100
-  batch_size: 256
+  batch_size: 200 #256
   valid_batch_size_per_gpu: 512
 
   log_to_screen: !!bool True
   log_to_tensorboard: !!bool True
-  save_checkpoint: !!bool True
+  save_checkpoint: !!bool False
 
 baseline:
   <<: *DEFAULT

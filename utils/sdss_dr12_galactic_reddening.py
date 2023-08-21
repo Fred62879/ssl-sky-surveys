@@ -28,4 +28,5 @@ class SDSSDR12Reddening:
       new_ebv = np.random.uniform(0, self.ebv_max)
       image = np.float32(image*(10.**(-self.R*new_ebv/2.5)))
 
+    # print('dered done')
     return image
